@@ -1,0 +1,28 @@
+# Add your project dependencies here, e.g.:
+# requests==2.25.1
+# numpy>=1.20.0 
+
+# Core dependencies
+git+https://github.com/openai/whisper.git
+sounddevice>=0.4.6
+numpy>=1.24.0
+torch>=2.0.0
+fastapi>=0.100.0
+uvicorn>=0.15.0
+python-multipart>=0.0.5
+websockets>=10.0
+python-dotenv>=1.0.0
+httpx>=0.24.0
+requests>=2.31.0
+pydantic>=2.0.0
+
+# LangChain ecosystem
+langgraph>=0.0.10
+langchain>=0.1.0
+langchain-openai>=0.0.2
+langchain-core>=0.1.0
+langchain-perplexity>=0.0.1
+
+# Optional performance monitoring
+psutil>=5.9.0
+aiolimiter>=0.0.1

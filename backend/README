@@ -1,0 +1,105 @@
+# Cap Catcher: AI-Powered Fact Verification for Spoken Content
+
+**Cap Catcher** is a tool designed to analyze spoken content, extract factual claims, and verify their accuracy using external knowledge sources.
+
+## Process Overview
+
+The core process of Cap Catcher involves the following steps:
+
+```mermaid
+graph TD;
+    A[Transcribe Speech to Text] --> B(Claim Extraction);
+    B --> C{Fact Check by Perplexity};
+```
+
+1.  **Speech Transcription**:
+    *   The input audio (speech) is converted into text.
+    *   *(Details about the transcription model/service used can be added here)*
+2.  **Claim Extraction**:
+    *   The transcribed text is processed to identify and isolate verifiable factual claims.
+    *   *(Details about the claim extraction methodology/model can be added here)*
+3.  **Fact Checking**:
+    *   Each extracted claim is then verified for accuracy.
+    *   Currently, this is done by querying Perplexity AI.
+    *   *(Details about how Perplexity is queried and how results are interpreted can be added here)*
+
+## Installation
+
+*(Instructions on how to install and set up the project will go here. This might include dependencies, environment setup, etc.)*
+
+## Usage
+
+*(Instructions on how to run the tool, including command-line arguments, input formats, and expected output will go here.)*
+
+## Contributing
+
+*(Information for potential contributors, such as coding standards, how to submit pull requests, etc.)*
+
+## Project Structure and Architecture
+
+This section outlines the proposed file and folder structure for the Cap Catcher project, along with a high-level overview of its architecture.
+
+### Directory Structure
+
+A well-organized directory structure helps in maintaining and scaling the project. Here's a suggested layout:
+
+```
+cap-catcher/
+├── .gitignore           # Specifies intentionally untracked files for Git
+├── README.md            # This file: project overview, setup, and usage
+├── requirements.txt     # Project dependencies
+├── config/              # Configuration files (API keys, settings)
+│   └── settings.yaml    # Example settings file
+├── data/                # Input/output data
+│   ├── input/           # Sample audio files or other input data
+│   └── output/          # Generated transcriptions, claims, results
+├── scripts/             # Helper scripts (e.g., data processing, batch runs)
+│   └── run_pipeline.sh  # Example script to run the full process
+├── src/                 # Main source code for the application
+│   ├── __init__.py
+│   ├── main.py          # Main entry point for the application
+│   ├── pipeline.py      # Orchestrates the workflow
+│   ├── transcription/   # Modules for speech-to-text
+│   │   ├── __init__.py
+│   │   └── transcriber.py
+│   ├── claim_extraction/ # Modules for claim extraction
+│   │   ├── __init__.py
+│   │   └── extractor.py
+│   ├── fact_checking/   # Modules for fact checking (e.g., Perplexity AI)
+│   │   ├── __init__.py
+│   │   └── checker.py
+│   └── utils/           # Utility functions
+│       ├── __init__.py
+│       └── file_handler.py
+└── tests/               # Automated tests
+    ├── __init__.py
+    ├── unit/            # Unit tests for individual components
+    │   ├── __init__.py
+    │   └── test_transcriber.py
+    └── integration/     # Integration tests for combined parts
+        ├── __init__.py
+        └── test_pipeline.py
+```
+
+### High-Level Architecture
+
+The application follows a pipeline architecture where data flows through distinct processing stages:
+
+1.  **Input Acquisition**: The system takes an audio file as input.
+2.  **Orchestration (`src/main.py`, `src/pipeline.py`)**:
+    *   Manages the overall process flow.
+    *   Coordinates calls to the different modules.
+3.  **Speech Transcription (`src/transcription/transcriber.py`)**:
+    *   Converts the input audio into raw text using a specified speech-to-text engine.
+4.  **Claim Extraction (`src/claim_extraction/extractor.py`)**:
+    *   Analyzes the transcribed text to identify and isolate verifiable factual statements (claims).
+5.  **Fact Checking (`src/fact_checking/checker.py`)**:
+    *   Takes each extracted claim.
+    *   Queries an external knowledge base (e.g., Perplexity AI) to verify the accuracy of the claim.
+    *   Interprets the results to assign a veracity status.
+6.  **Output Generation**:
+    *   Presents the claims along with their verification status.
+    *   Results can be saved to files (e.g., in `data/output/`) or displayed.
+
+**Configuration (`config/`)** such as API keys, model parameters, and thresholds will be managed centrally.
+**Utilities (`src/utils/`)** will provide common functions like file I/O, logging, and data parsing, accessible by various modules.

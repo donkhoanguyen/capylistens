@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Screen</title>
+    <style>
+        :root {
+            --bg: #181a1b;
+            --fg: #fff;
+            --input-placeholder: #b0b3b8;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .new-screen-content {
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+        }
+        .new-screen h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--fg);
+        }
+        .new-screen p {
+            color: var(--input-placeholder);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="new-screen-content">
+        <h2>Processing Your Request</h2>
+        <p>Please wait while we analyze your input...</p>
+    </div>
+</body>
+</html> 

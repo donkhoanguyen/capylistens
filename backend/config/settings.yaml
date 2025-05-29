@@ -1,0 +1,8 @@
+# Configuration for Cap Catcher
+
+# Example: API keys (DO NOT COMMIT ACTUAL KEYS TO GIT)
+# perplexity_api_key: YOUR_PERPLEXITY_API_KEY_HERE
+
+# Example: Model settings
+# transcription_model: "whisper-base"
+# claim_extraction_threshold: 0.7 

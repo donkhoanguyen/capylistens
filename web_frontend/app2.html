@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPY Listen</title>
+    <link rel="icon" type="image/x-icon" href="capybaras/favicon.ico">
+    <style>
+        :root {
+            --bg: #051623;
+            --overlay-bg: #181a1b;
+            --fg: #fff;
+            --input-bg: #232526;
+            --input-fg: #fff;
+            --input-placeholder: #b0b3b8;
+            --accent: #4f8cff;
+            --container-bg: #232526;
+            --container-radius: 20px;
+            --shadow: 0 4px 32px rgba(0,0,0,0.4);
+            --border: #333;
+            --status-correct: #27ae60;
+            --status-incorrect: #e74c3c;
+            --status-uncertain: #7f8c8d;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            position: relative;
+        }
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            background-image: url('capybaras/ChatGPT Image May 28, 2025, 02_03_30 AM.png');
+            background-size: 80% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--overlay-bg);
+            opacity: 0.85;
+            z-index: 0;
+            min-height: 100vh;
+            height: 100%;
+        }
+        .centered-view, .recording-view, .new-screen {
+            position: relative;
+            z-index: 1;
+        }
+        .centered-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            transition: opacity 0.3s ease-out;
+        }
+        .centered-view.dimmed {
+            opacity: 0.2;
+            pointer-events: none;
+            filter: blur(2px);
+        }
+        .big-prompt {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: var(--fg);
+            text-align: center;
+        }
+        .modern-input-row {
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            padding: 0 16px;
+            width: 420px;
+            max-width: 90vw;
+            height: 56px;
+        }
+        .modern-input-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--input-fg);
+            font-size: 1.15rem;
+            padding: 0 12px;
+        }
+        .modern-input-row input::placeholder {
+            color: var(--input-placeholder);
+        }
+        .modern-input-row .icon-btn {
+            background: none;
+            border: none;
+            color: var(--input-placeholder);
+            font-size: 1.3em;
+            cursor: pointer;
+            margin: 0 4px;
+            transition: color 0.2s;
+        }
+        .modern-input-row .icon-btn:active,
+        .modern-input-row .icon-btn:focus {
+            color: var(--accent);
+        }
+        .modern-input-row .send-btn {
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            margin-left: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .modern-input-row .send-btn:hover {
+            background: #2563eb;
+        }
+        /* New screen styles */
+        .new-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-out;
+            z-index: 1000;
+        }
+        .new-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .new-screen iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .new-screen-content {
+            text-align: center;
+            padding: 2rem;
+        }
+        .new-screen h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--fg);
+        }
+        .new-screen p {
+            color: var(--input-placeholder);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        /* Hide the recording view initially */
+        .recording-view {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            background: transparent;
+            color: var(--fg);
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 0px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            gap: 48px;
+            background: rgba(35, 37, 38, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: var(--container-radius);
+            box-shadow: var(--shadow);
+            padding: 32px 48px;
+            max-width: 900px;
+            margin-top: 60px;
+        }
+        .section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .section h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--fg);
+        }
+        .transcription-box {
+            background: rgba(35, 37, 38, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 1.08rem;
+            color: var(--fg);
+            line-height: 1.6;
+            min-height: 100px;
+        }
+        .claims-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .claim-card {
+            background: rgba(35, 37, 38, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            color: var(--fg);
+        }
+        .claim-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .status-incorrect { color: var(--status-incorrect); }
+        .status-correct { color: var(--status-correct); }
+        .status-uncertain { color: var(--status-uncertain); }
+        .icon {
+            font-size: 1.2em;
+            display: inline-block;
+        }
+        #status {
+            color: var(--fg);
+            margin: 5px 0;
+            font-weight: 500;
+        }
+        #countdown {
+            color: var(--fg);
+            margin-top: 5px;
+            font-size: 1.1rem;
+        }
+        @media (max-width: 700px) {
+            .container {
+                flex-direction: column;
+                padding: 24px 10px;
+                gap: 24px;
+            }
+        }
+        /* Remove image button styles */
+        .stop-button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .stop-button:hover {
+            background: #2563eb;
+        }
+        .stop-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* Audio recording specific styles */
+        #messages {
+            margin-top: 10px;
+            border: 1px solid var(--border);
+            padding: 10px;
+            width: 80%;
+            max-height: 200px;
+            overflow-y: scroll;
+            background: rgba(35, 37, 38, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: var(--container-radius);
+        }
+        
+        #messages h3 {
+            color: var(--fg);
+            margin-bottom: 10px;
+        }
+        
+        #messages ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #messages li {
+            padding: 8px;
+            margin: 4px 0;
+            border-radius: 8px;
+            background: rgba(35, 37, 38, 0.5);
+        }
+        
+        .error-message { color: var(--status-incorrect); }
+        .transcription-message { color: var(--accent); }
+        .fact-check-message { color: var(--status-correct); }
+        .success-message { color: var(--status-uncertain); }
+        .info-message { color: var(--fg); }
+        
+        .recording-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .recording-controls button {
+            padding: 12px 24px;
+            border-radius: 24px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--accent);
+            color: var(--fg);
+        }
+        
+        .recording-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .recording-controls button:hover:not(:disabled) {
+            background: #2563eb;
+        }
+        
+        /* Ensure the recording view takes full height and starts from top */
+        #recordingView {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        #recordingView.active {
+            display: flex;
+        }
+        .transcription-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--fg);
+        }
+        
+        .transcription-text p {
+            margin-bottom: 1rem;
+        }
+        
+        .claim-card {
+            background: rgba(35, 37, 38, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .claim-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .claim-text {
+            flex: 1;
+            font-size: 1.05rem;
+            line-height: 1.4;
+        }
+        
+        .claim-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial Prompt View -->
+    <div class="centered-view" id="initialView">
+        <div class="big-prompt">What's on the agenda today?</div>
+        <form id="agendaForm" style="width:100%;display:flex;justify-content:center;">
+            <div class="modern-input-row">
+                <button type="button" class="icon-btn" tabindex="-1" title="Tools">&#9881;</button>
+                <input type="text" id="textInput" placeholder="Give me context" autocomplete="off" />
+                <button type="button" class="icon-btn" tabindex="-1" title="Microphone">&#127908;</button>
+                <button type="button" class="send-btn" id="startButton" title="Go">&#10148;</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- New Screen (initially hidden) -->
+    <div class="new-screen" id="newScreen">
+        <iframe src="new_screen.html" id="newScreenFrame"></iframe>
+    </div>
+
+    <!-- Recording UI (hidden initially) -->
+    <div class="recording-view" id="recordingView">
+        <button id="stopButton" class="stop-button" disabled>Stop Recording</button>
+        <div class="container">
+            <div class="section">
+                <h2>Transcription</h2>
+                <div class="transcription-box" id="transcriptions">
+                    <div class="transcription-text">
+                        <p>Hello, this is Dr. Angela Meyers, calling on behalf of the National Wellness Registry, a government-supported health protection initiative.</p>
+                        
+                        <p>We've identified your household as unregistered, and that puts you at risk of losing access to basic medical coverage in emergencies like floods or power grid failures.</p>
+                        
+                        <p>Since January 2025, the CDC requires all citizens to report their DNA status and blood type to remain eligible for first-response care. This is due to rising medical emergencies linked to vaccine-related genetic drift.</p>
+                        
+                        <p>New data shows that 82% of seniors who did not register with the National Wellness Registry were denied care during the last natural disaster in California.</p>
+                        
+                        <p>If you're over 65 and own property, FEMA also now requires proof of vaccination status and biometric ID to approve disaster relief.</p>
+                        
+                        <p>The recent release of the E-Virus in Southeast Asia — already reported in 12 U.S. states — means time is critical.</p>
+                        
+                        <p>President Biden's executive order on National Wellness Enforcement authorizes mandatory home visits for anyone not verified in the registry by March 15th, 2025.</p>
+                        
+                        <p>But don't worry — we can process your protection form right now. Just confirm your address, social security number, and vaccination lot number so we can activate your health flag in the system.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <h2>Claims</h2>
+                <div class="claims-list" id="fact-checks">
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">CDC requires DNA/blood info for emergency care</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> Incorrect
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">Genetic drift due to vaccines</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> Incorrect (pseudoscience)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">82% of unregistered seniors denied care</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> False or Unverifiable
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">FEMA requires biometric proof for property relief</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> Incorrect
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">"E-Virus" outbreak in 12 U.S. states</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> Fabricated
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">Mandatory home visits authorized by executive order</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> False
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">Registry activates "health flag" in a national system</div>
+                            <span class="claim-status status-incorrect">
+                                <span class="icon">&#10060;</span> Fabricated, Misleading
+                            </span>
+                        </div>
+                    </div>
+                    <div class="claim-card">
+                        <div class="claim-content">
+                            <div class="claim-text">Requests SSN + vaccination lot ID</div>
+                            <span class="claim-status status-uncertain">
+                                <span class="icon">⚠️</span> Dangerous phishing indicator
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p id="status">Status: Recording...</p>
+        <p id="countdown">Next segment in: <span id="timeLeft">30</span>s</p>
+        <div id="messages">
+            <h3>Server Responses:</h3>
+            <ul id="responseList"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('startButton');
+            const stopButton = document.getElementById('stopButton');
+            const initialView = document.getElementById('initialView');
+            const newScreen = document.getElementById('newScreen');
+            const recordingView = document.getElementById('recordingView');
+            const textInput = document.getElementById('textInput');
+
+            startButton.addEventListener('click', function() {
+                // Hide the initial view completely
+                initialView.style.display = 'none';
+                
+                // Show the new screen
+                newScreen.classList.add('active');
+                
+                // Optional: Add a slight delay before showing the recording view
+                setTimeout(() => {
+                    newScreen.classList.remove('active');
+                    recordingView.classList.add('active');
+                    // Enable stop button when recording starts
+                    stopButton.disabled = false;
+                }, 1500); // 1.5 second delay
+            });
+
+            // Add stop button functionality
+            stopButton.addEventListener('click', function() {
+                if (typeof stopRecording === 'function') {
+                    stopRecording();
+                    stopButton.disabled = true;
+                }
+            });
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html> 
